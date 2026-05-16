@@ -1,0 +1,330 @@
+<!--
+  NavHub — 导航中枢
+  瑞士国际主义平面 + 交互式羽毛 + 团体官方 Logo
+-->
+---
+import { GROUP_LIST } from "../data/groups.js";
+import BlogList from "./BlogList.astro";
+---
+
+<div class="max-w-[1440px] mx-auto px-8 md:px-20 pt-40 md:pt-56 pb-32">
+
+  <!-- ===== Hero ===== -->
+  <div class="mb-56 md:mb-72">
+    <p class="text-[0.7rem] tracking-[0.4em] text-gray-400 mb-10">
+      LOVELIVE! SERIES
+    </p>
+    <h1 class="text-5xl sm:text-7xl md:text-[10rem] font-black text-gray-900 tracking-[-0.03em] leading-[0.85] overflow-hidden">
+      ラブライブ！
+    </h1>
+    <div class="mt-12 md:mt-16 flex flex-col md:flex-row md:items-end gap-4 md:gap-20">
+      <p class="text-lg md:text-xl text-gray-400 font-light tracking-wider max-w-sm leading-relaxed">
+        学园偶像企画&ensp;—&ensp;音楽と夢の物語
+      </p>
+      <div class="hidden md:block flex-1 border-t border-gray-100"></div>
+    </div>
+  </div>
+
+  <!-- ===== 视觉引导羽毛：真实 PNG 图片 + 可拖拽 + 物理吸附 ===== -->
+  <div
+    id="guide-feather"
+    class="fixed z-30 select-none"
+    style="left: 0; top: 0; cursor: grab; width: 90px; height: 180px; margin-left: -45px; margin-top: -90px;"
+  >
+    <img
+      src="/images/feather.png"
+      alt=""
+      draggable="false"
+      class="w-full h-full object-contain"
+      style="filter: drop-shadow(2px 6px 12px rgba(0,0,0,0.18)) drop-shadow(0 2px 4px rgba(0,0,0,0.10));"
+    />
+  </div>
+
+  <!-- ===== 团体导航 ===== -->
+  <nav class="space-y-36 md:space-y-48 mb-48">
+    {GROUP_LIST.map((group, i) => (
+      <a
+        href={`https://${group.subdomain}.lovelive.example.com`}
+        data-subdomain={group.subdomain}
+        data-group-index={i}
+        class="group block reveal-item group-card"
+        id={`group-card-${i}`}
+        style={`--delay: ${i * 100}`}
+      >
+        <div
+          class="flex"
+          style={`justify-content: ${i % 2 === 0 ? 'flex-start' : 'flex-end'}`}
+        >
+          <div class="relative w-full md:max-w-[680px]">
+            <!-- 玻璃卡片 -->
+            <div
+              class="relative rounded-3xl border border-white/30
+                     bg-white/40 backdrop-blur-2xl
+                     shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06),0_2px_8px_-2px_rgba(0,0,0,0.03)]
+                     hover:bg-white/60 hover:shadow-[0_20px_60px_-16px_rgba(0,0,0,0.10),0_4px_12px_-4px_rgba(0,0,0,0.04)]
+                     transition-all duration-700 ease-out
+                     px-10 py-10 md:px-14 md:py-12"
+            >
+              <!-- 团体色光晕 -->
+              <div
+                class="absolute -z-10 inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-2xl"
+                style="background: radial-gradient(ellipse at center, ${group.color}15 0%, transparent 70%);"
+              ></div>
+
+              <!-- 序号 -->
+              <span class="absolute top-6 right-8 text-8xl font-black text-gray-100 select-none pointer-events-none leading-none tabular-nums">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+
+              <div class="relative">
+                <!-- 团体 Logo：保留原色、放大 -->
+                <div class="mb-5 h-14 md:h-16 flex items-center">
+                  {group.logo ? (
+                    <img
+                      src={group.logo}
+                      alt={`${group.name} logo`}
+                      class="h-full w-auto object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-500"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <span class="text-2xl font-black text-gray-800 tracking-tight opacity-80 group-hover:opacity-100 transition-opacity">
+                      {group.name}
+                    </span>
+                  )}
+                </div>
+
+                <!-- 团体色细线 -->
+                <div class="w-10 h-[2px] mb-5 rounded-full transition-all duration-500 group-hover:w-14" style="background: ${group.color}"></div>
+
+                <!-- 名称（有 logo 时显示子名称） -->
+                {group.logo && (
+                  <p class="text-sm text-gray-400 tracking-wide mb-2">{group.nameCN}</p>
+                )}
+
+                <!-- 标语 -->
+                <p class="mt-1 text-base md:text-lg text-gray-500 font-light leading-relaxed max-w-md">
+                  「{group.description}」
+                </p>
+
+                <!-- 元数据 -->
+                <div class="mt-6 flex items-center gap-6 text-xs text-gray-400 tracking-wider">
+                  <span class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    {group.members.length} 人
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    {group.years}
+                  </span>
+                </div>
+
+                <!-- 箭头 -->
+                <div class="absolute right-0 bottom-0 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:translate-x-0">
+                  <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
+    ))}
+  </nav>
+
+  <!-- ===== 分割线 ===== -->
+  <div class="border-t border-gray-100 mb-24"></div>
+
+  <!-- ===== 一些感想 ===== -->
+  <div>
+    <p class="text-sm tracking-[0.3em] text-gray-500 font-bold mb-12">NOTES</p>
+    <BlogList group="lovelive" max={4} />
+  </div>
+
+</div>
+
+<style>
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(32px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .reveal-item {
+    animation: reveal 0.9s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    animation-delay: calc(var(--delay, 0) * 1ms);
+    animation-play-state: paused;
+  }
+  .reveal-item.revealed {
+    animation-play-state: running;
+  }
+</style>
+
+<script>
+  // === 卡片渐现 ===
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+  );
+  document.querySelectorAll(".reveal-item").forEach((el) => observer.observe(el));
+
+  // === 物理羽毛：真实图片 + 贴卡侧边 + 可拖拽 + 弹簧吸附 ===
+  (function() {
+    const feather = document.getElementById("guide-feather");
+    const cards = document.querySelectorAll(".group-card");
+    const COUNT = cards.length;
+    if (!feather || COUNT === 0) return;
+
+    // 物理
+    let fx = 0, fy = 0;
+    let vx = 0, vy = 0;
+    let targetIdx = 0;
+
+    const SPRING = 5.5;
+    const DRAG = 4.8;       // 接近临界阻尼
+    const DROP_PUSH = 160;  // 切换目标时向下的初速度
+
+    // 吸附点：紧贴卡片侧边，不飞远
+    function getTarget(idx) {
+      const card = cards[idx];
+      if (!card) return { x: 0, y: 0 };
+      const r = card.getBoundingClientRect();
+      const y = r.top + r.height / 2;
+      // 左排卡 → 羽毛贴卡片右边缘外侧 20px；右排卡 → 羽毛贴卡片左边缘外侧 20px
+      const x = (idx % 2 === 0)
+        ? r.right + 28
+        : r.left - 28;
+      return { x, y };
+    }
+
+    // 停在第一张
+    function snapTo(idx) {
+      const t = getTarget(idx);
+      fx = t.x;
+      fy = t.y;
+      vx = 0;
+      vy = 0;
+      targetIdx = idx;
+      feather.style.left = fx + "px";
+      feather.style.top = fy + "px";
+    }
+
+    // --- 拖拽 ---
+    let dragging = false;
+    let dragOffX = 0, dragOffY = 0;
+    let prevFx = 0, prevFy = 0;  // 上一帧位置，用于计算甩出速度
+    let prevTime = 0;
+
+    feather.addEventListener("mousedown", (e) => {
+      dragging = true;
+      feather.style.cursor = "grabbing";
+      dragOffX = e.clientX - fx;
+      dragOffY = e.clientY - fy;
+      prevFx = fx;
+      prevFy = fy;
+      prevTime = performance.now();
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      prevFx = fx;
+      prevFy = fy;
+      prevTime = performance.now();
+      fx = e.clientX - dragOffX;
+      fy = e.clientY - dragOffY;
+      feather.style.left = fx + "px";
+      feather.style.top = fy + "px";
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (!dragging) return;
+      dragging = false;
+      feather.style.cursor = "grab";
+      const dt = Math.max((performance.now() - prevTime) / 1000, 0.016);
+      vx = (fx - prevFx) / dt * 0.1;
+      vy = (fy - prevFy) / dt * 0.1;
+      let best = targetIdx;
+      let bestDist = Infinity;
+      for (let i = 0; i < COUNT; i++) {
+        const r = cards[i].getBoundingClientRect();
+        const d = Math.hypot(r.left + r.width / 2 - fx, r.top + r.height / 2 - fy);
+        if (d < bestDist) { bestDist = d; best = i; }
+      }
+      targetIdx = best;
+    });
+
+    // --- 物理循环 ---
+    let lastTime = performance.now();
+
+    function tick(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      if (!dragging) {
+        // 缓存每帧各卡片坐标
+        const rects = [];
+        for (let i = 0; i < COUNT; i++) {
+          rects[i] = cards[i].getBoundingClientRect();
+        }
+
+        const viewMid = window.innerHeight * 0.5;
+        let best = targetIdx;
+        let bestDist = Infinity;
+        for (let i = 0; i < COUNT; i++) {
+          const d = Math.abs(rects[i].top + rects[i].height / 2 - viewMid);
+          if (d < bestDist) { bestDist = d; best = i; }
+        }
+
+        const curDist = Math.abs(rects[targetIdx].top + rects[targetIdx].height / 2 - viewMid);
+        if (best !== targetIdx && bestDist < curDist - 60) {
+          if (best > targetIdx) {
+            vy = Math.max(vy, 0) + DROP_PUSH;
+          } else {
+            vy = Math.min(vy, 0) - DROP_PUSH * 0.6;
+          }
+          targetIdx = best;
+        }
+
+        // 弹簧 + 阻尼（直接用缓存的 rects）
+        const r = rects[targetIdx];
+        const tx = (targetIdx % 2 === 0) ? r.right + 28 : r.left - 28;
+        const ty = r.top + r.height / 2;
+        const ax = (tx - fx) * SPRING - vx * DRAG;
+        const ay = (ty - fy) * SPRING - vy * DRAG;
+
+        vx += ax * dt;
+        vy += ay * dt;
+        fx += vx * dt;
+        fy += vy * dt;
+
+        feather.style.left = fx + "px";
+        feather.style.top = fy + "px";
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    window.addEventListener("resize", () => {
+      if (dragging) return;
+      snapTo(targetIdx);
+    });
+
+    function start() {
+      snapTo(0);
+      lastTime = performance.now();
+      requestAnimationFrame(tick);
+    }
+
+    if (document.readyState === "complete") {
+      setTimeout(start, 100);
+    } else {
+      window.addEventListener("load", () => setTimeout(start, 100));
+    }
+  })();
+</script>

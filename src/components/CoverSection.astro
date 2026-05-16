@@ -1,0 +1,83 @@
+<!--
+  CoverSection — 封面图（<img> 标签，满宽不裁切）+ 上滑提示
+  采样封面 TopBar 重叠区域颜色，驱动顶栏玻璃质感
+-->
+---
+const { group } = Astro.props;
+const bgImage = group.coverImage || null;
+---
+
+<div class="relative w-full -mt-16">
+  {bgImage ? (
+    <div class="relative w-full">
+      <!-- TopBar 模糊层：fixed 定位，直接使用封面图 URL，不依赖 JS 变量 -->
+      <div class="fixed top-0 left-0 right-0 h-16 z-30 pointer-events-none">
+        <div class="absolute inset-0 bg-no-repeat opacity-90"
+             style={`background-image: url('${bgImage}'); background-size: 100% auto; background-position: top center; filter: blur(48px) saturate(2) brightness(1.15);`}>
+        </div>
+        <div class="absolute inset-0 bg-white/10"></div>
+      </div>
+
+      <!-- 封面：100% 宽度，自动高度，不裁切 -->
+      <img
+        src={bgImage}
+        alt={`${group.name} 封面`}
+        class="w-full h-auto block"
+        data-cover-sampler
+        data-group={group.subdomain}
+        onload={`(function(img){var view=document.getElementById('view-'+img.dataset.group);if(view&&!view.classList.contains('hidden')){var c=document.createElement('canvas');c.width=1;c.height=1;var ctx=c.getContext('2d');var sampleH=Math.min(80,img.naturalHeight);ctx.drawImage(img,0,0,img.naturalWidth,sampleH,0,0,1,1);var d=ctx.getImageData(0,0,1,1).data;document.documentElement.style.setProperty('--cover-top-color','rgb('+d[0]+','+d[1]+','+d[2]+')')}})(this)`}
+      />
+
+      <!-- 底部渐变遮罩：暗色 → 团体色，无缝过渡到 Hero -->
+      <div class="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-black/40 via-black/10 to-transparent pointer-events-none"></div>
+      <div class="absolute bottom-0 left-0 right-0 h-24 pointer-events-none transition-[background] duration-700"
+           style={`background: var(--accent, ${group.color}); mask-image: linear-gradient(to top, black, transparent); -webkit-mask-image: linear-gradient(to top, black, transparent);`}></div>
+
+      <!-- 上滑提示 -->
+      <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
+        <span class="text-xs text-white/50 font-light tracking-[0.3em]">上滑探索</span>
+        <span class="block w-4 h-4 border-r border-b border-white/40 rotate-45 animate-swipe-bounce"></span>
+      </div>
+
+      <button
+        class="absolute bottom-0 left-0 right-0 h-20 cursor-pointer z-20"
+        aria-label="上滑进入页面"
+        onclick={`document.getElementById('group-content-${group.subdomain}')?.scrollIntoView({ behavior: 'smooth' })`}
+      ></button>
+    </div>
+  ) : (
+    <!-- 无封面时的占位 -->
+    <div class="relative h-screen w-full overflow-hidden" style={`background: linear-gradient(160deg, ${group.color}15 0%, ${group.color}35 40%, ${group.color}70 100%);`}>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl opacity-20" style={`background: ${group.color}`}></div>
+        <div class="relative text-center">
+          <h1 class="text-[10rem] md:text-[14rem] font-black text-white/10 select-none leading-none tracking-tighter">
+            {group.name}
+          </h1>
+          <p class="text-lg text-white/40 font-light mt-2 tracking-wider">
+            {group.fullName}
+          </p>
+        </div>
+      </div>
+      <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
+        <span class="text-xs text-white/50 font-light tracking-[0.3em]">上滑探索</span>
+        <span class="block w-4 h-4 border-r border-b border-white/40 rotate-45 animate-swipe-bounce"></span>
+      </div>
+      <button
+        class="absolute bottom-0 left-0 right-0 h-20 cursor-pointer z-20"
+        aria-label="上滑进入页面"
+        onclick={`document.getElementById('group-content-${group.subdomain}')?.scrollIntoView({ behavior: 'smooth' })`}
+      ></button>
+    </div>
+  )}
+</div>
+
+<style>
+  @keyframes swipe-bounce {
+    0%, 100% { transform: rotate(45deg) translateY(0); opacity: 0.3; }
+    50% { transform: rotate(45deg) translateY(5px); opacity: 0.7; }
+  }
+  .animate-swipe-bounce {
+    animation: swipe-bounce 2.2s ease-in-out infinite;
+  }
+</style>

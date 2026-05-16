@@ -1,0 +1,126 @@
+<!--
+  index.astro — 站点唯一入口
+  通过客户端 JS 检测子域名，切换显示内容：
+  - lovelive.* / www.* → 导航中枢（NavHub）
+  - 缪.* → μ's 页面
+  - 水.* → Aqours 页面
+  - 虹.* → 虹咲学园页面
+  - 星.* → Liella! 页面
+  - 莲.* → 莲之空页面
+  - 鸟.* → 人生不易部 / BLUEBIRD 页面
+
+  开发模式可用 ?site=缪 等查询参数模拟子域名
+-->
+---
+import Layout from "../layouts/Layout.astro";
+import NavHub from "../components/NavHub.astro";
+import GroupPage from "../components/GroupPage.astro";
+import { GROUPS, GROUP_LIST } from "../data/groups.js";
+---
+
+<Layout
+  title="LoveLive! 系列粉丝站"
+  description="LoveLive! 系列学园偶像企划粉丝站点，包含 μ's、Aqours、虹咲学园、Liella!、莲之空五个团体"
+>
+
+  <!-- 导航中枢（默认可见） -->
+  <div id="view-hub" class="hidden">
+    <NavHub />
+  </div>
+
+  <!-- 各团体专属页面 -->
+  {GROUP_LIST.map((group) => (
+    <div id={`view-${group.subdomain}`} class="hidden">
+      <GroupPage group={group} />
+    </div>
+  ))}
+
+  <!-- 子域名路由脚本 -->
+  <script>
+    (function() {
+      // 子域名 → 视图 ID 映射
+      var VIEW_MAP = {
+        lovelive: "view-hub",
+        www: "view-hub",
+        "缪": "view-缪",
+        "水": "view-水",
+        "虹": "view-虹",
+        "星": "view-星",
+        "莲": "view-莲",
+        "鸟": "view-鸟",
+      };
+
+      var hostname = window.location.hostname;
+
+      // 提取子域名（取第一段）
+      var subdomain = hostname.split(".")[0].toLowerCase();
+
+      // 开发模式：?site=xxx 参数覆盖
+      var params = new URLSearchParams(window.location.search);
+      var siteParam = params.get("site");
+      if (siteParam && VIEW_MAP[siteParam]) {
+        subdomain = siteParam;
+      }
+
+      // 团体默认主色调（用于初始设置）
+      var GROUP_COLORS = {
+        "缪": "#FF6B8A",
+        "水": "#1E90FF",
+        "虹": "#8B5CF6",
+        "星": "#22C55E",
+        "莲": "#06B6D4",
+        "鸟": "#FF6B00",
+      };
+
+      // 显示对应视图
+      var viewId = VIEW_MAP[subdomain] || "view-hub";
+      var view = document.getElementById(viewId);
+      if (view) {
+        view.classList.remove("hidden");
+      }
+
+      // 设置全局主色调
+      if (GROUP_COLORS[subdomain]) {
+        document.documentElement.style.setProperty("--accent", GROUP_COLORS[subdomain]);
+      }
+
+
+      // --- 修正所有跨子域名链接 ---
+
+      var isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
+
+      // 获取基础域名（去掉首段子域名后的部分）
+      var parts = hostname.split(".");
+      var baseDomain;
+      if (parts.length <= 2) {
+        baseDomain = hostname;
+      } else {
+        baseDomain = parts.slice(1).join(".");
+      }
+
+      // 修正所有跨子域名链接（导航卡片 + 顶栏快捷导航）
+      var cards = document.querySelectorAll("[data-subdomain]");
+      for (var i = 0; i < cards.length; i++) {
+        var card = cards[i];
+        var sub = card.getAttribute("data-subdomain");
+        if (isLocal) {
+          // 本地开发：用查询参数模拟子域名
+          card.setAttribute("href", "/?site=" + encodeURIComponent(sub));
+        } else {
+          // 生产环境：跳转到对应子域名
+          card.setAttribute("href", "https://" + sub + "." + baseDomain);
+        }
+      }
+
+      // 修正「返回导航页」链接（GroupPage 中）
+      var backLinks = document.querySelectorAll("[data-back-to-hub]");
+      for (var j = 0; j < backLinks.length; j++) {
+        if (isLocal) {
+          backLinks[j].setAttribute("href", "/?site=lovelive");
+        } else {
+          backLinks[j].setAttribute("href", "https://lovelive." + baseDomain);
+        }
+      }
+    })();
+  </script>
+</Layout>
