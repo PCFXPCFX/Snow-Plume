@@ -52,8 +52,17 @@ import { GROUPS, GROUP_LIST } from "../data/groups.js";
 
       var hostname = window.location.hostname;
 
-      // 提取子域名（取第一段）
-      var subdomain = hostname.split(".")[0].toLowerCase();
+      // 提取子域名（取第一段），将 Punycode 转回中文
+      var rawSub = hostname.split(".")[0].toLowerCase();
+      var PUNYCODE_MAP = {
+        "xn--qq0a": "缪",
+        "xn--1rw": "水",
+        "xn--681a": "虹",
+        "xn--kiv": "星",
+        "xn--vo1a": "莲",
+        "xn--566a": "鸟",
+      };
+      var subdomain = PUNYCODE_MAP[rawSub] || rawSub;
 
       // 开发模式：?site=xxx 参数覆盖
       var params = new URLSearchParams(window.location.search);
