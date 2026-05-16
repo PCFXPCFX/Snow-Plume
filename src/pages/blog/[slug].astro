@@ -1,0 +1,101 @@
+<!--
+  BlogPost — 博客文章详情页面
+  路由: /blog/[slug]/
+-->
+---
+import { getCollection } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return Promise.all(
+    posts.map(async (post) => {
+      const rendered = await post.render();
+      return {
+        params: { slug: post.slug },
+        props: {
+          post: post.data,
+          Content: rendered.Content,
+        },
+      };
+    })
+  );
+}
+
+const { post, Content } = Astro.props;
+
+const groupNameMap: Record<string, string> = {
+  lovelive: "LoveLive! 综合",
+  "缪": "μ's",
+  "水": "Aqours",
+  "虹": "虹咲学园",
+  "星": "Liella!",
+  "莲": "莲之空",
+  "鸟": "人生不易部",
+};
+---
+
+<Layout title={`${post.title} — LoveLive!`} description={post.excerpt}>
+  <article class="max-w-3xl mx-auto px-6 py-20">
+    <!-- 返回链接 -->
+    <a
+      href="/"
+      data-back-to-hub
+      class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 transition-colors mb-10 group"
+    >
+      <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+      </svg>
+      返回
+    </a>
+
+    <!-- 文章头部 -->
+    <header class="mb-12">
+      <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 mb-5 tracking-wide">
+        {groupNameMap[post.group] || post.group}
+      </span>
+      <h1 class="text-3xl md:text-4xl font-black text-gray-900 mb-4 leading-tight tracking-tight">
+        {post.title}
+      </h1>
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-0.5 rounded-full" style="background: var(--accent, #ec4899)"></div>
+        <time class="text-sm text-gray-400" datetime={post.date.toISOString()}>
+          {post.date.toLocaleDateString("zh-CN", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </time>
+      </div>
+    </header>
+
+    <!-- 文章正文（Markdown 渲染） -->
+    <div class="prose prose-gray max-w-none
+      prose-headings:font-bold prose-headings:text-gray-900 prose-headings:tracking-tight
+      prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-6
+      prose-p:text-gray-600 prose-p:leading-relaxed prose-p:my-5
+      prose-a:text-pink-500 prose-a:no-underline hover:prose-a:underline
+      prose-strong:text-gray-900
+      prose-li:text-gray-600
+      prose-blockquote:border-l-pink-300 prose-blockquote:bg-gray-50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
+      prose-img:rounded-2xl prose-img:shadow-md
+    ">
+      <Content />
+    </div>
+
+    <!-- 底部导航 -->
+    <footer class="mt-20 pt-8 border-t border-gray-100 flex justify-between items-center">
+      <a
+        href="/"
+        data-back-to-hub
+        class="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5 group"
+      >
+        <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+        </svg>
+        返回主页
+      </a>
+      <span class="text-xs text-gray-300">LoveLive! 粉丝站</span>
+    </footer>
+  </article>
+</Layout>

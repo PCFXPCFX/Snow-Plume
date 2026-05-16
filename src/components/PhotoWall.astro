@@ -1,0 +1,78 @@
+<!--
+  PhotoWall — 照片墙
+  网格布局 + 点击放大（lightbox），精致圆角与阴影
+  用户将图片放入 public/images/[group]/ 目录，在 groups.js photos 数组中配置
+-->
+---
+const { group } = Astro.props;
+
+// ★ 用户在此添加图片路径，例如 '/images/缪/sif-01.jpg'
+const images = group.photos || [];
+---
+
+<section>
+  {images.length === 0 ? (
+    <!-- 无图片时的占位 -->
+    <div class="bg-white rounded-2xl p-12 border border-gray-100/80 text-center">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-50 flex items-center justify-center">
+        <svg class="w-7 h-7 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+        </svg>
+      </div>
+      <p class="text-sm text-gray-400 mb-1">照片墙 · 图片待添加</p>
+      <p class="text-xs text-gray-300">在 public/images/ 放入图片后于 groups.js 中配置</p>
+    </div>
+  ) : (
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+      {images.map((img) => (
+        <button
+          class="photo-item block aspect-[4/3] rounded-xl overflow-hidden
+                 bg-[linear-gradient(45deg,#f5f5f5_25%,transparent_25%,transparent_75%,#f5f5f5_75%,#f5f5f5),linear-gradient(45deg,#f5f5f5_25%,white_25%,white_75%,#f5f5f5_75%,#f5f5f5)]
+                 bg-[length:16px_16px] bg-[position:0_0,8px_8px]
+                 hover:ring-2 hover:ring-offset-2 transition-all duration-300 cursor-zoom-in
+                 shadow-sm hover:shadow-md"
+          data-src={img}
+          aria-label="查看大图"
+        >
+          <img
+            src={img}
+            alt=""
+            loading="lazy"
+            class="w-full h-full object-cover"
+          />
+        </button>
+      ))}
+    </div>
+  )}
+
+  <!-- Lightbox（ID 加 subdomain 防多团体页面冲突） -->
+  <div id={`lightbox-${group.subdomain}`}
+    class="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm hidden items-center justify-center p-4 cursor-zoom-out"
+    onclick="this.classList.add('hidden'); this.classList.remove('flex');"
+  >
+    <button
+      class="absolute top-6 right-6 text-white/40 hover:text-white/80 text-3xl leading-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/5 transition-all"
+      aria-label="关闭"
+    >&times;</button>
+    <img id={`lightbox-img-${group.subdomain}`} src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" />
+  </div>
+</section>
+
+<script>
+  // Lightbox 交互（作用域限定在当前 section）
+  (function() {
+    const section = document.currentScript.parentElement;
+    const lb = section.querySelector("[id^='lightbox-']");
+    const lbImg = section.querySelector("[id^='lightbox-img-']");
+    section.querySelectorAll(".photo-item").forEach(function(btn) {
+      btn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (lb && lbImg) {
+          lbImg.src = btn.getAttribute("data-src");
+          lb.classList.remove("hidden");
+          lb.classList.add("flex");
+        }
+      });
+    });
+  })();

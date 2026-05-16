@@ -1,0 +1,154 @@
+<!--
+  TopBar — 全局顶栏
+  精致玻璃拟态：高透明度 + 强模糊 + 柔和底边
+  包含：Logo → 团体快捷导航 → 友链下拉
+-->
+---
+import { GROUP_LIST } from "../data/groups.js";
+
+// ★ 我的博客链接：留空则跳转本站博客，填写则跳转外部地址
+const MY_BLOG_URL = "";   // 例如 "https://example.com" 或留空 ""
+const MY_BLOG_LABEL = "我的博客";
+
+const FRIEND_LINKS = [
+  { name: "μ's 时光蛋", url: "https://lovelive.ws/", desc: "μ's 粉丝资源站" },
+  { name: "梦之门", url: "https://lovelive10.com/", desc: "μ's 纪念站" },
+  { name: "Aqours 许愿瓶", url: "https://aqours.tv/", desc: "Aqours 粉丝资源站" },
+  { name: "虹之咲活动室", url: "https://ll-ch.com/", desc: "虹咲学园粉丝站" },
+  { name: "Liella! 星象馆", url: "https://liella.club/", desc: "Liella! 粉丝资源站" },
+];
+---
+
+<header
+  id="topbar"
+  class="fixed top-0 left-0 right-0 z-40 h-16 flex items-center px-6
+         bg-white/72 backdrop-blur-xl
+         border-b border-white/20
+         shadow-[0_1px_3px_rgba(0,0,0,0.04)]
+         text-sm transition-all duration-700">
+
+  <!-- 左侧：Logo -->
+  <a
+    href="/"
+    data-back-to-hub
+    class="font-black text-2xl tracking-tight shrink-0 mr-10 hover:opacity-70 transition-all duration-300"
+    style="color: var(--accent, #ec4899)"
+  >
+    LL!
+  </a>
+
+  <!-- 中间：团体快捷导航 -->
+  <nav class="flex items-center gap-1">
+    {GROUP_LIST.map((group) => (
+      <a
+        href={`https://${group.subdomain}.lovelive.example.com`}
+        data-subdomain={group.subdomain}
+        class="topbar-nav-link px-4 py-2 rounded-full text-sm font-medium
+               text-gray-400 hover:text-gray-700 hover:bg-black/[0.04]
+               transition-all duration-300"
+      >
+        {group.subdomain}
+      </a>
+    ))}
+  </nav>
+
+  <!-- 右侧留空 + 我的博客 + 友链 -->
+  <div class="flex-1"></div>
+
+  <!-- 我的博客 -->
+  <a
+    href={MY_BLOG_URL || "/"}
+    target={MY_BLOG_URL ? "_blank" : "_self"}
+    rel={MY_BLOG_URL ? "noopener noreferrer" : ""}
+    class="my-blog-link px-4 py-2 rounded-full text-sm font-medium
+           text-gray-400 hover:text-gray-700 hover:bg-black/[0.04]
+           transition-all duration-300 mr-2"
+  >
+    {MY_BLOG_LABEL}
+  </a>
+
+  <div id="friend-links-dropdown" class="relative group">
+    <button
+      id="friend-links-btn"
+      class="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium
+             text-gray-400 hover:text-gray-600 hover:bg-black/[0.04]
+             transition-all duration-300"
+      aria-expanded="false"
+    >
+      友链
+      <svg class="w-3.5 h-3.5 opacity-40 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+
+    <!-- 下拉菜单 -->
+    <div
+      id="friend-links-menu"
+      class="absolute right-0 top-full mt-2 w-56 py-2 rounded-2xl
+             bg-white/95 backdrop-blur-2xl border border-gray-100/60 shadow-xl shadow-black/[0.04]
+             opacity-0 invisible group-hover:opacity-100 group-hover:visible
+             transition-all duration-200 z-50"
+    >
+      {FRIEND_LINKS.map((link) => (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block px-5 py-3 hover:bg-gray-50/80 transition-colors"
+        >
+          <div class="text-sm font-medium text-gray-700">{link.name}</div>
+          <div class="text-xs text-gray-400 mt-0.5">{link.desc}</div>
+        </a>
+      ))}
+    </div>
+  </div>
+</header>
+
+<script>
+  // 顶栏自身链接修正（独立于 index.astro 的路由脚本，确保 blog 等页面也能正常跳转）
+  (function() {
+    const hostname = window.location.hostname;
+    const isLocal = hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.");
+    const parts = hostname.split(".");
+    const baseDomain = parts.length <= 2 ? hostname : parts.slice(1).join(".");
+
+    document.querySelectorAll("#topbar [data-subdomain]").forEach(function(el) {
+      const sub = el.getAttribute("data-subdomain");
+      el.setAttribute("href", isLocal
+        ? "/?site=" + encodeURIComponent(sub)
+        : "https://" + sub + "." + baseDomain
+      );
+    });
+
+    const logo = document.querySelector("#topbar [data-back-to-hub]");
+    if (logo) {
+      logo.setAttribute("href", isLocal ? "/?site=lovelive" : "https://lovelive." + baseDomain);
+    }
+
+    // 友链下拉触屏适配
+    const btn = document.getElementById("friend-links-btn");
+    const menu = document.getElementById("friend-links-menu");
+    if (btn && menu) {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
+        const wasOpen = !menu.classList.contains("opacity-0");
+        if (wasOpen) {
+          menu.classList.add("opacity-0", "invisible");
+          menu.classList.remove("opacity-100", "visible");
+        } else {
+          menu.classList.remove("opacity-0", "invisible");
+          menu.classList.add("opacity-100", "visible");
+        }
+        btn.setAttribute("aria-expanded", !wasOpen ? "true" : "false");
+      });
+      document.addEventListener("click", function(e) {
+        const isOpen = !menu.classList.contains("opacity-0");
+        if (!btn.contains(e.target) && !menu.contains(e.target) && isOpen) {
+          menu.classList.add("opacity-0", "invisible");
+          menu.classList.remove("opacity-100", "visible");
+          btn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+  })();
+</script>
