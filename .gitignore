@@ -5,3 +5,17 @@ dist/
 *.log
 .claude/
 .astro/
+
+# 团体图片目录：只允许 cover，其余均不上传
+public/images/缪/*
+!public/images/缪/cover.*
+public/images/水/*
+!public/images/水/cover.*
+public/images/虹/*
+!public/images/虹/cover.*
+public/images/星/*
+!public/images/星/cover.*
+public/images/莲/*
+!public/images/莲/cover.*
+public/images/鸟/*
+!public/images/鸟/cover.*
