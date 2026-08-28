@@ -137,8 +137,19 @@ import BlogList from "./BlogList.astro";
 
   <!-- ===== 一些感想 ===== -->
   <div>
-    <p class="text-sm tracking-[0.3em] text-gray-500 font-bold mb-12">NOTES</p>
-    <BlogList group="lovelive" max={4} />
+    <div class="flex items-end justify-between mb-12">
+      <p class="text-sm tracking-[0.3em] text-gray-500 font-bold">NOTES</p>
+      <a
+        href="/blog/"
+        class="group/all flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors tracking-wider"
+      >
+        查看全部
+        <svg class="w-3.5 h-3.5 group-hover/all:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+    <BlogList group="lovelive" max={8} />
   </div>
 
 </div>

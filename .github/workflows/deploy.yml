@@ -1,0 +1,55 @@
+# git push → 自动构建并上传到 Cloudflare Pages（直传现有项目，不影响已绑定的自定义域名/中文子域名）
+# 一次性配置见 README「部署」章节：
+#   1. 把下方 CF_PAGES_PROJECT 改成实际项目名
+#   2. GitHub 仓库 Settings → Secrets and variables → Actions 添加：
+#      CLOUDFLARE_API_TOKEN   （CF 面板 → My Profile → API Tokens，权限 Account · Cloudflare Pages · Edit）
+#      CLOUDFLARE_ACCOUNT_ID  （CF 面板右侧可见）
+#      CONTENT_REPO_TOKEN     （GitHub Fine-grained PAT，仅授予私有内容仓库 Snow-Plume-content 的 Contents 只读权限）
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: # 允许在 Actions 页手动触发
+
+concurrency:
+  group: pages-deploy
+  cancel-in-progress: false
+
+env:
+  CF_PAGES_PROJECT: ll_front # ← 改成你的 Pages 项目名
+  CF_PAGES_BRANCH: main      # ← 与 Pages 项目的生产分支一致；部署若出现在 Preview 列表就改这里
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      # 博客文章不进主仓库(见 README「博客内容与代码分离」),构建前从私有内容仓库拉取
+      - name: Checkout private blog content
+        uses: actions/checkout@v4
+        with:
+          repository: PCFXPCFX/Snow-Plume-content
+          path: src/content/blog
+          token: ${{ secrets.CONTENT_REPO_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name="$CF_PAGES_PROJECT" --branch="$CF_PAGES_BRANCH" --commit-dirty=true

@@ -53,28 +53,70 @@ npm run dev          # http://localhost:4321
 
 ## Deploy
 
-```bash
-npm run build        # output → dist/
+Deployment is just `git push` — GitHub Actions builds the site and uploads it to Cloudflare Pages automatically (`.github/workflows/deploy.yml`). No local build needed, and existing custom domains / Chinese subdomain routing stay untouched.
+
+One-time setup:
+
+1. In `.github/workflows/deploy.yml`, set `CF_PAGES_PROJECT` to your Pages project name.
+2. Create the **private** repo `Snow-Plume-content` and push the posts to it (`src/content/blog/` is already a standalone git repo locally — `git push -u origin main`).
+3. In the GitHub repo: Settings → Secrets and variables → Actions, add `CLOUDFLARE_API_TOKEN` (CF dashboard → My Profile → API Tokens, permission **Account · Cloudflare Pages · Edit**), `CLOUDFLARE_ACCOUNT_ID` (shown on the CF dashboard), and `CONTENT_REPO_TOKEN` (GitHub fine-grained PAT granting **Contents · Read** on `Snow-Plume-content` only).
+4. `git push` → done. Manual runs are also available from the Actions tab (workflow_dispatch).
+
+To build locally anyway: `npm run build` (output → `dist/`), or upload directly with `npx wrangler pages deploy dist`.
+
+## Blog Posts
+
+Posts are Markdown files in `src/content/blog/`; the filename is the URL (`my-post.md` → `/blog/my-post/`).
+
+### Creating a post
+
+Just create a `.md` file in `src/content/blog/`:
+
+```markdown
+---
+title: "Post title"        # required
+group: "缪"               # required: lovelive / 缪 / 水 / 虹 / 星 / 莲 / 鸟
+date: 2026-08-28           # required, newer first
+excerpt: "Shown in lists"  # optional, clamped to 2 lines
+cover: "/images/xx.jpg"    # optional
+pinned: true               # optional, pin to top
+---
+
+Markdown body……
 ```
 
-Deploy `dist/` to Cloudflare Pages with custom domain + subdomain routing.
+> Note: posts don't go into this repo. After writing, commit & push inside `src/content/blog/` to sync with the private content repo (see "Blog Content Out of the Repo").
 
-## Private Blog Posts
+### Where posts appear
 
-Blog posts in `src/content/blog/` are public by default. To keep future posts private (local dev only, not pushed to GitHub):
+| Location | Notes | Ordering |
+|----------|-------|----------|
+| Group page "Notes" section | That group's posts only, up to 5 | `pinned` first, then `date` desc |
+| Archive `/blog/` | All posts, grouped by year | `date` desc (pinned ignored) |
+| Post detail page | `/blog/<filename>/` | — |
+
+### Adjusting the order
+
+- **Pin**: add `pinned: true` — pinned posts come first in the "Notes" section (multiple pins allowed; among them, still date-desc);
+- **Change the date**: editing `date` reorders posts, newest first;
+- The archive always sorts by date; pinning does not affect it.
+
+The "我的博客" (My Blog) button in the TopBar is an external link configured via `MY_BLOG_URL` in `src/components/TopBar.astro` (leave empty to link back to the site home).
+
+## Blog Content Out of the Repo
+
+The public repo is framework-only; blog posts **are not committed** — `src/content/blog/` is in `.gitignore`.
+
+- Posts live locally; `src/content/blog/` is also a standalone git repo whose remote is the **private** `Snow-Plume-content` repo (backup + CI source);
+- After writing a new post, sync it there:
 
 ```bash
-# After creating a new post:
-git update-index --skip-worktree src/content/blog/your-private-post.md
+cd src/content/blog
+git add -A && git commit -m "new post" && git push
 ```
 
-The file stays on disk and works in dev, but git ignores all changes to it — no accidental commits or pushes. To track it again later:
-
-```bash
-git update-index --no-skip-worktree src/content/blog/your-private-post.md
-```
-
-List all skipped files: `git ls-files -v | grep "^S"`
+- At deploy time, GitHub Actions checks the private content repo out into `src/content/blog/` (via `CONTENT_REPO_TOKEN`) before building — the live site still shows posts;
+- Early posts remain visible in this repo's initial commits (kept intentionally); the latest tree contains none.
 
 ## Song Links
 
@@ -123,7 +165,9 @@ src/
 ├── layouts/Layout.astro
 ├── pages/
 │   ├── index.astro               # Entry + subdomain router
-│   └── blog/[slug].astro         # Blog post detail
+│   └── blog/
+│       ├── index.astro           # Blog archive (/blog/)
+│       └── [slug].astro          # Blog post detail
 ├── components/
 │   ├── NavHub.astro              # Hub page (lovelive.*)
 │   ├── GroupPage.astro           # Group page
@@ -134,7 +178,7 @@ src/
 │   └── PhotoWall.astro           # Photo grid + lightbox
 ├── content/
 │   ├── config.ts                 # Collection schema
-│   └── blog/*.md                 # Blog posts
+│   └── blog/*.md                 # Blog posts (private content repo, not committed)
 └── data/
     └── groups.js                 # Groups, members, songs, images
 ```

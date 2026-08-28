@@ -19,3 +19,10 @@ public/images/莲/*
 !public/images/莲/cover.*
 public/images/鸟/*
 !public/images/鸟/cover.*
+
+# Windows 快捷方式 / Wrangler 本地状态
+*.lnk
+.wrangler/
+
+# 博客文章:内容在私有仓库 Snow-Plume-content,不进主仓库
+src/content/blog/

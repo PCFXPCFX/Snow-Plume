@@ -55,28 +55,70 @@ npm run dev          # http://localhost:4321
 
 ## 部署
 
-```bash
-npm run build        # 产物 → dist/
+部署 = 一句 `git push`：GitHub Actions 自动构建并上传到 Cloudflare Pages（`.github/workflows/deploy.yml`），无需本地构建，已绑定的自定义域名与中文子域名不受影响。
+
+一次性配置：
+
+1. 在 `.github/workflows/deploy.yml` 中把 `CF_PAGES_PROJECT` 改成你的 Pages 项目名；
+2. 创建**私有**仓库 `Snow-Plume-content`，把文章内容推送上去（`src/content/blog/` 本地已是独立 git 仓库，`git push -u origin main` 即可）；
+3. GitHub 仓库 → Settings → Secrets and variables → Actions，添加 `CLOUDFLARE_API_TOKEN`（CF 面板 → My Profile → API Tokens 创建，权限选 **Account · Cloudflare Pages · Edit**）、`CLOUDFLARE_ACCOUNT_ID`（CF 面板右侧可见）和 `CONTENT_REPO_TOKEN`（GitHub Fine-grained PAT，仅授予 `Snow-Plume-content` 的 **Contents · Read** 权限）；
+4. `git push` 即自动部署；也可在 Actions 页手动触发（workflow_dispatch）。
+
+如需本地构建：`npm run build`（产物 → `dist/`），或用 `npx wrangler pages deploy dist` 手动直传。
+
+## 博客文章
+
+文章是 `src/content/blog/` 下的 Markdown 文件，文件名即 URL（`my-post.md` → `/blog/my-post/`）。
+
+### 创建文章
+
+在 `src/content/blog/` 新建 `.md` 文件即可：
+
+```markdown
+---
+title: "文章标题"           # 必填
+group: "缪"                # 必填：lovelive / 缪 / 水 / 虹 / 星 / 莲 / 鸟
+date: 2026-08-28           # 必填，日期越新越靠前
+excerpt: "列表里显示的摘要"   # 可选，超过两行截断
+cover: "/images/xx.jpg"    # 可选
+pinned: true               # 可选，置顶
+---
+
+正文 Markdown……
 ```
 
-将 `dist/` 部署到 Cloudflare Pages，配置自定义域名和子域名路由。
+> 注：文章不进主仓库。写完后在 `src/content/blog/` 内 commit + push，同步到私有内容仓库（见「博客内容与代码分离」）。
 
-## 私密博客
+### 显示位置
 
-`src/content/blog/` 中的博客默认公开。如果后续文章不想推送到 GitHub：
+| 位置 | 说明 | 排序规则 |
+|------|------|----------|
+| 团体页「一些感想」栏 | 只显示该团体的文章，最多 5 篇 | `pinned` 置顶优先，其余按 `date` 倒序 |
+| 全部文章归档 `/blog/` | 全站文章，按年份分组 | 按 `date` 倒序（不看置顶） |
+| 文章详情页 | `/blog/<文件名>/` | — |
+
+### 调整显示顺序
+
+- **置顶**：frontmatter 加 `pinned: true`，「一些感想」栏内排最前（可多篇置顶，多篇之间仍按日期倒序）；
+- **调日期**：改 `date` 即可改变先后，新的在前；
+- 归档页始终按日期排序，置顶不影响它。
+
+顶栏的「我的博客」按钮是外链，在 `src/components/TopBar.astro` 的 `MY_BLOG_URL` 配置，留空则跳回站点首页。
+
+## 博客内容与代码分离
+
+主仓库只开源框架，博客文章**不进 git**：`src/content/blog/` 已加入 `.gitignore`。
+
+- 文章只保存在本地；`src/content/blog/` 同时是一个独立的 git 仓库，远程指向**私有**仓库 `Snow-Plume-content`（备份 + 供 CI 拉取）；
+- 写完新文章后，在该目录里同步：
 
 ```bash
-# 新建文章后执行：
-git update-index --skip-worktree src/content/blog/你的文章.md
+cd src/content/blog
+git add -A && git commit -m "新文章" && git push
 ```
 
-文件保留在本地，dev 正常运行，但 git 忽略其所有变更——不会误 commit 或 push。恢复跟踪：
-
-```bash
-git update-index --no-skip-worktree src/content/blog/你的文章.md
-```
-
-查看所有已跳过文件：`git ls-files -v | grep "^S"`
+- 部署时 GitHub Actions 用 `CONTENT_REPO_TOKEN` 把私有内容仓库拉取到 `src/content/blog/` 再构建，线上站点照常展示文章；
+- 主仓库的历史提交中仍保留着早期文章（初始提交），最新代码树中则不再包含。
 
 ## 歌曲链接
 
@@ -136,7 +178,9 @@ src/
 ├── layouts/Layout.astro          # HTML 骨架
 ├── pages/
 │   ├── index.astro               # 入口 + 子域名路由
-│   └── blog/[slug].astro         # 博客文章详情
+│   └── blog/
+│       ├── index.astro           # 全部文章归档（/blog/）
+│       └── [slug].astro          # 博客文章详情
 ├── components/
 │   ├── NavHub.astro              # 导航中枢
 │   ├── GroupPage.astro           # 团体页面
@@ -147,7 +191,7 @@ src/
 │   └── PhotoWall.astro           # 照片墙 + Lightbox
 ├── content/
 │   ├── config.ts                 # 集合配置
-│   └── blog/*.md                 # 博客文章
+│   └── blog/*.md                 # 博客文章（在私有内容仓库，不进主仓库）
 └── data/
     └── groups.js                 # 团体、成员、歌曲、图片配置
 ```

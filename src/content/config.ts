@@ -8,6 +8,8 @@ const blogCollection = defineCollection({
     date: z.date(),
     excerpt: z.string().optional(),
     cover: z.string().optional(),
+    // 置顶：标记后在列表中排在最前，可多篇
+    pinned: z.boolean().optional(),
   }),
 });
 

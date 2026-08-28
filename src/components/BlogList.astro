@@ -12,11 +12,16 @@ export interface Props {
 
 const { group, max = 5 } = Astro.props;
 
-// 获取该团体的博客文章，按日期倒序
+// 获取该团体的博客文章：置顶优先，其余按日期倒序
 const allPosts = await getCollection("blog");
 const posts = allPosts
   .filter((p) => p.data.group === group)
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .sort((a, b) => {
+    const pa = a.data.pinned ? 1 : 0;
+    const pb = b.data.pinned ? 1 : 0;
+    if (pa !== pb) return pb - pa;
+    return b.data.date.getTime() - a.data.date.getTime();
+  })
   .slice(0, max);
 ---
 
@@ -41,6 +46,22 @@ const posts = allPosts
       >
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0">
+            {post.data.pinned && (
+              <div
+                class="flex items-center gap-1.5 mb-2 text-[0.65rem] font-medium tracking-[0.2em]"
+                style="color: var(--accent, #ec4899)"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <line x1="12" x2="12" y1="17" y2="22" />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"
+                  />
+                </svg>
+                置顶
+              </div>
+            )}
             <h3 class="text-base font-semibold text-gray-800 mb-2 group-hover/post:text-gray-900 transition-colors">
               {post.data.title}
             </h3>
