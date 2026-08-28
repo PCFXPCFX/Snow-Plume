@@ -9,7 +9,7 @@
 [![Astro](https://img.shields.io/badge/Astro-5.x-FF5A03?logo=astro)](https://astro.build)
 [![Tailwind](https://img.shields.io/badge/Tailwind-3.x-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-[![Deploy](https://img.shields.io/badge/deploy-Cloudflare%20Pages-F38020?logo=cloudflare)](https://pages.cloudflare.com)
+[![Deploy](https://img.shields.io/badge/deploy-Cloudflare%20Workers-F38020?logo=cloudflare)](https://workers.cloudflare.com)
 
 The name **白羽** (shiraha, "white feather") is drawn from LoveLive!'s most enduring visual metaphor — the feather of inheritance passed from μ's through each successive generation.
 
@@ -53,16 +53,15 @@ npm run dev          # http://localhost:4321
 
 ## Deploy
 
-Deployment is just `git push` — GitHub Actions builds the site and uploads it to Cloudflare Pages automatically (`.github/workflows/deploy.yml`). No local build needed, and existing custom domains / Chinese subdomain routing stay untouched.
+Deployment is just `git push` — GitHub Actions builds the site and uploads `dist/` to the Worker `snow-plume` as **static assets** via `wrangler deploy` (config in `wrangler.jsonc`). No local build needed; custom domains (incl. Chinese subdomains) and IP-preference setup on the Worker stay untouched.
 
 One-time setup:
 
-1. In `.github/workflows/deploy.yml`, set `CF_PAGES_PROJECT` to your Pages project name.
+1. In the GitHub repo: Settings → Secrets and variables → Actions, add `CLOUDFLARE_API_TOKEN` (CF dashboard → My Profile → API Tokens, permission **Account · Workers Scripts · Edit**), `CLOUDFLARE_ACCOUNT_ID` (shown on the CF dashboard), and `CONTENT_REPO_TOKEN` (GitHub fine-grained PAT granting **Contents · Read** on `Snow-Plume-content` only).
 2. Create the **private** repo `Snow-Plume-content` and push the posts to it (`src/content/blog/` is already a standalone git repo locally — `git push -u origin main`).
-3. In the GitHub repo: Settings → Secrets and variables → Actions, add `CLOUDFLARE_API_TOKEN` (CF dashboard → My Profile → API Tokens, permission **Account · Cloudflare Pages · Edit**), `CLOUDFLARE_ACCOUNT_ID` (shown on the CF dashboard), and `CONTENT_REPO_TOKEN` (GitHub fine-grained PAT granting **Contents · Read** on `Snow-Plume-content` only).
-4. `git push` → done. Manual runs are also available from the Actions tab (workflow_dispatch).
+3. `git push` → done. Manual runs are also available from the Actions tab (workflow_dispatch).
 
-To build locally anyway: `npm run build` (output → `dist/`), or upload directly with `npx wrangler pages deploy dist`.
+To deploy locally: `npm run build && npx wrangler deploy`.
 
 ## Blog Posts
 
@@ -156,7 +155,7 @@ The feather uses a **spring-mass-damper** physics model with critical damping �
 | Styling | [Tailwind CSS](https://tailwindcss.com) 3.x |
 | Content | Astro Content Collections (Markdown) |
 | Font | [Noto Sans SC](https://fonts.google.com/specimen/Noto+Sans+SC) |
-| Hosting | [Cloudflare Pages](https://pages.cloudflare.com) |
+| Hosting | [Cloudflare Workers](https://workers.cloudflare.com) (static assets) |
 
 ## Project Structure
 

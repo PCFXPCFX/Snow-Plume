@@ -1,0 +1,11 @@
+// Cloudflare Workers 静态资产部署配置
+// dist/ 由 `npm run build` 生成,wrangler deploy 时整包上传到 Worker,
+// 已在 CF 面板绑定的自定义域名(含中文子域名)与路由不受影响。
+// 未匹配到的路径返回 404(如需自定义 404 页,加 not_found_handling: "404-page" 并提供 dist/404.html)
+{
+  "name": "snow-plume",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}

@@ -1,11 +1,12 @@
-# git push → 自动构建并上传到 Cloudflare Pages（直传现有项目，不影响已绑定的自定义域名/中文子域名）
+# git push → 自动构建并部署到 Cloudflare Workers(静态资产直传现有 Worker,
+# 保留已绑定的自定义域名与中文子域名,不影响 CF IP 优选等配置)
 # 一次性配置见 README「部署」章节：
-#   1. 把下方 CF_PAGES_PROJECT 改成实际项目名
+#   1. Worker 名在 wrangler.jsonc 的 name 字段(当前: snow-plume)
 #   2. GitHub 仓库 Settings → Secrets and variables → Actions 添加：
-#      CLOUDFLARE_API_TOKEN   （CF 面板 → My Profile → API Tokens，权限 Account · Cloudflare Pages · Edit）
+#      CLOUDFLARE_API_TOKEN   （CF 面板 → My Profile → API Tokens，权限 Account · Workers Scripts · Edit）
 #      CLOUDFLARE_ACCOUNT_ID  （CF 面板右侧可见）
 #      CONTENT_REPO_TOKEN     （GitHub Fine-grained PAT，仅授予私有内容仓库 Snow-Plume-content 的 Contents 只读权限）
-name: Deploy to Cloudflare Pages
+name: Deploy to Cloudflare Workers
 
 on:
   push:
@@ -13,12 +14,8 @@ on:
   workflow_dispatch: # 允许在 Actions 页手动触发
 
 concurrency:
-  group: pages-deploy
+  group: workers-deploy
   cancel-in-progress: false
-
-env:
-  CF_PAGES_PROJECT: snow-plume # ← 改成你的 Pages 项目名
-  CF_PAGES_BRANCH: main      # ← 与 Pages 项目的生产分支一致；部署若出现在 Preview 列表就改这里
 
 jobs:
   deploy:
@@ -47,9 +44,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Deploy to Cloudflare Pages
+      # wrangler-action 不经 shell 执行命令,$VAR 不会展开,动态值一律用 ${{ }} 表达式
+      - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ env.CF_PAGES_PROJECT }} --branch=${{ env.CF_PAGES_BRANCH }} --commit-dirty=true
+          wranglerVersion: "4"
+          command: deploy

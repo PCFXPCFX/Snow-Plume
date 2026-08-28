@@ -9,7 +9,7 @@
 [![Astro](https://img.shields.io/badge/Astro-5.x-FF5A03?logo=astro)](https://astro.build)
 [![Tailwind](https://img.shields.io/badge/Tailwind-3.x-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-[![Deploy](https://img.shields.io/badge/deploy-Cloudflare%20Pages-F38020?logo=cloudflare)](https://pages.cloudflare.com)
+[![Deploy](https://img.shields.io/badge/deploy-Cloudflare%20Workers-F38020?logo=cloudflare)](https://workers.cloudflare.com)
 
 取名**白羽**，出自 LoveLive! 系列最核心的视觉隐喻——从 μ's 剧场版结尾飘落的那片无人拾起的羽毛，到 Aqours 千歌接过传承之羽，再到理亚的紫羽。六代团体，一片白羽贯穿始终。
 
@@ -55,16 +55,15 @@ npm run dev          # http://localhost:4321
 
 ## 部署
 
-部署 = 一句 `git push`：GitHub Actions 自动构建并上传到 Cloudflare Pages（`.github/workflows/deploy.yml`），无需本地构建，已绑定的自定义域名与中文子域名不受影响。
+部署 = 一句 `git push`：GitHub Actions 自动构建，并把 `dist/` 作为**静态资产**用 `wrangler deploy` 直传到 Worker `snow-plume`（配置见 `wrangler.jsonc`），无需本地构建；Worker 上已绑定的自定义域名（含中文子域名）与 IP 优选配置不受影响。
 
 一次性配置：
 
-1. 在 `.github/workflows/deploy.yml` 中把 `CF_PAGES_PROJECT` 改成你的 Pages 项目名；
+1. GitHub 仓库 → Settings → Secrets and variables → Actions，添加 `CLOUDFLARE_API_TOKEN`（CF 面板 → My Profile → API Tokens 创建，权限选 **Account · Workers Scripts · Edit**）、`CLOUDFLARE_ACCOUNT_ID`（CF 面板右侧可见）和 `CONTENT_REPO_TOKEN`（GitHub Fine-grained PAT，仅授予 `Snow-Plume-content` 的 **Contents · Read** 权限）；
 2. 创建**私有**仓库 `Snow-Plume-content`，把文章内容推送上去（`src/content/blog/` 本地已是独立 git 仓库，`git push -u origin main` 即可）；
-3. GitHub 仓库 → Settings → Secrets and variables → Actions，添加 `CLOUDFLARE_API_TOKEN`（CF 面板 → My Profile → API Tokens 创建，权限选 **Account · Cloudflare Pages · Edit**）、`CLOUDFLARE_ACCOUNT_ID`（CF 面板右侧可见）和 `CONTENT_REPO_TOKEN`（GitHub Fine-grained PAT，仅授予 `Snow-Plume-content` 的 **Contents · Read** 权限）；
-4. `git push` 即自动部署；也可在 Actions 页手动触发（workflow_dispatch）。
+3. `git push` 即自动部署；也可在 Actions 页手动触发（workflow_dispatch）。
 
-如需本地构建：`npm run build`（产物 → `dist/`），或用 `npx wrangler pages deploy dist` 手动直传。
+如需本地部署：`npm run build && npx wrangler deploy`。
 
 ## 博客文章
 
@@ -169,7 +168,7 @@ songs: [
 | 样式 | [Tailwind CSS](https://tailwindcss.com) 3.x |
 | 内容 | Astro Content Collections（Markdown） |
 | 字体 | [Noto Sans SC](https://fonts.google.com/specimen/Noto+Sans+SC) |
-| 部署 | [Cloudflare Pages](https://pages.cloudflare.com) |
+| 部署 | [Cloudflare Workers](https://workers.cloudflare.com)（静态资产托管） |
 
 ## 项目结构
 
