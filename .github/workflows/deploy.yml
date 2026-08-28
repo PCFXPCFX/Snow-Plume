@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CF_PAGES_PROJECT: ll_front # ← 改成你的 Pages 项目名
+  CF_PAGES_PROJECT: snow-plume # ← 改成你的 Pages 项目名
   CF_PAGES_BRANCH: main      # ← 与 Pages 项目的生产分支一致；部署若出现在 Preview 列表就改这里
 
 jobs:
@@ -52,4 +52,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name="$CF_PAGES_PROJECT" --branch="$CF_PAGES_BRANCH" --commit-dirty=true
+          command: pages deploy dist --project-name=${{ env.CF_PAGES_PROJECT }} --branch=${{ env.CF_PAGES_BRANCH }} --commit-dirty=true
