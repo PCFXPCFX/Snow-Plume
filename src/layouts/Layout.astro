@@ -20,6 +20,30 @@ const { title, description = "LoveLive! 系列粉丝站", color = "#FF6B8A" } = 
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <title>{title}</title>
+    <!-- FlashCat RUM：仅在正式域名 *.pcfx.site 上启用，其他环境不加载（is:inline 防止 Astro 打包改写） -->
+    <script is:inline>
+      if (location.hostname === "pcfx.site" || location.hostname.endsWith(".pcfx.site")) {
+        (function(h,o,u,n,d) {
+          h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
+          d=o.createElement(u);d.async=1;d.src=n
+          n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n)
+        })(window,document,'script','https://static.flashcat.cloud/browser-sdk/v0/flashcat-rum.js','FC_RUM')
+        window.FC_RUM.onReady(function() {
+          window.FC_RUM.init({
+            applicationId: "4GjvFuPYTD4J5sMyfiFACP",
+            clientToken: "b7c08ea7cd295c3fb6f589fa0fa5ca68236",
+            service: "ll-front",
+            env: "prod",
+            version: "1.0.0",
+            sessionSampleRate: 100,
+            sessionReplaySampleRate: 10,
+            defaultPrivacyLevel: "mask-user-input",
+            // 站点为纯静态、暂无后端 API；将来有接口时在此添加
+            // allowedTracingUrls: ["https://api.example.com"]
+          });
+        });
+      }
+    </script>
     <!-- Google Font: Noto Sans SC -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
